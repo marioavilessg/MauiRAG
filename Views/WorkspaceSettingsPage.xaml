@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RagMaui.Views.WorkspaceSettingsPage"
+             Title="WorkspaceSettingsPage">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+
+            <Label Text="Workspace activo" FontAttributes="Bold"/>
+
+            <Picker
+            ItemsSource="{Binding Workspaces}"
+            ItemDisplayBinding="{Binding Name}"
+            SelectedItem="{Binding SelectedWorkspace}" />
+
+            <Label Text="System Prompt" FontAttributes="Bold"/>
+
+            <Editor HeightRequest="100"
+                Text="{Binding SystemPrompt}" />
+
+            <Button Text="Guardar Prompt"
+                Command="{Binding SavePromptCommand}" />
+
+            <Label Text="Crear nuevo workspace"
+               FontAttributes="Bold"/>
+
+            <HorizontalStackLayout>
+                <Entry Placeholder="Nombre workspace"
+                   Text="{Binding NewWorkspaceName}"
+                   HorizontalOptions="FillAndExpand"/>
+
+                <Button Text="Crear"
+                    Command="{Binding CreateWorkspaceCommand}" />
+            </HorizontalStackLayout>
+
+            <Button Text="Eliminar workspace seleccionado"
+                BackgroundColor="#aa3333"
+                TextColor="White"
+                Command="{Binding DeleteWorkspaceCommand}" />
+
+            <Label Text="Renombrar workspace"
+               FontAttributes="Bold"/>
+
+            <HorizontalStackLayout>
+                <Entry Placeholder="Nuevo nombre"
+                   Text="{Binding RenameWorkspaceName}"
+                   HorizontalOptions="FillAndExpand"/>
+
+                <Button Text="Renombrar"
+                    Command="{Binding RenameWorkspaceCommand}" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
