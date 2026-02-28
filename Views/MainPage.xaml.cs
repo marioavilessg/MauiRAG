@@ -25,6 +25,7 @@ namespace RagMaui
             base.OnAppearing();
 
             await _viewModel.InitializeAsync();
+            _viewModel.RefreshWorkspace();
         }
 
         private async void OnOpenSettingsClicked(object sender, EventArgs e)

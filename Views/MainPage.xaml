@@ -1,90 +1,192 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage 
+<ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:helpers="clr-namespace:RagMaui.Helpers"
-    x:Class="RagMaui.MainPage">
+    x:Class="RagMaui.MainPage"
+    BackgroundColor="#0F172A">
 
-    <ContentPage.Resources>
-        <helpers:InverseBoolConverter x:Key="InverseBoolConverter" />
-    </ContentPage.Resources>
+    <Grid RowDefinitions="Auto,*,Auto">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
+        <!-- ================= HEADER ================= -->
+        <Border Grid.Row="0"
+                BackgroundColor="#1E293B"
+                Stroke="Transparent"
+                StrokeThickness="0"
+                Padding="20,15"
+                Margin="0,0,0,5">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.2" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
+                    <Label Text="WORKSPACE ACTIVO"
+                           FontSize="10"
+                           FontAttributes="Bold"
+                           CharacterSpacing="1.5"
+                           TextColor="#94A3B8" />
+                    <Label Text="{Binding SelectedWorkspaceName}"
+                           FontAttributes="Bold"
+                           FontSize="18"
+                           TextColor="#F8FAFC"/>
+                </VerticalStackLayout>
 
-            <!-- ================= HEADER ================= -->
+                <HorizontalStackLayout Grid.Column="1"
+                                       Spacing="8"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,20,0">
+                    <Label Text="Chat"
+                           TextColor="#94A3B8"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           FontSize="14"/>
+                    <Switch IsToggled="{Binding IsChatMode}" ThumbColor="#F8FAFC" OnColor="#10B981" />
+                </HorizontalStackLayout>
 
-            <HorizontalStackLayout>
-                <Label Text="Workspace activo:"
-                       FontAttributes="Bold"
-                       VerticalOptions="Center" />
+                <ImageButton Grid.Column="2"
+                             Source="dotnet_bot.png"
+                             HeightRequest="32"
+                             WidthRequest="32"
+                             CornerRadius="16"
+                             VerticalOptions="Center"
+                             BackgroundColor="#334155"
+                             Clicked="OnOpenSettingsClicked">
+                    <ImageButton.Shadow>
+                        <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.3"/>
+                    </ImageButton.Shadow>
+                </ImageButton>
+            </Grid>
+        </Border>
 
-                <Label Text="{Binding SelectedWorkspace.Name}"
-                       Margin="10,0,0,0"
-                       VerticalOptions="Center" />
+        <!-- ================= CONTENIDO CENTRAL ================= -->
+        <Grid Grid.Row="1">
+            <ScrollView Padding="0,10">
+                <VerticalStackLayout Spacing="20" Margin="15,0">
 
-                <Button Text="⚙"
-                        HorizontalOptions="EndAndExpand"
-                        Clicked="OnOpenSettingsClicked" />
-            </HorizontalStackLayout>
+                    <CollectionView ItemsSource="{Binding Messages}"
+                                    IsVisible="{Binding IsChatMode}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BackgroundColor="#1E293B"
+                                        Stroke="#334155"
+                                        StrokeThickness="1"
+                                        Padding="15"
+                                        Margin="0,6"
+                                        StrokeShape="RoundRectangle 16">
+                                    <Label Text="{Binding Content}"
+                                           TextColor="#E2E8F0"
+                                           FontSize="15"
+                                           LineHeight="1.4"
+                                           LineBreakMode="WordWrap"/>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
 
-            <!-- ================= MODO ================= -->
+                    <Border BackgroundColor="#10B981"
+                            Padding="20"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 20"
+                            Margin="0,5">
+                        <Border.Shadow>
+                            <Shadow Brush="#10B981" Offset="0,8" Radius="15" Opacity="0.25"/>
+                        </Border.Shadow>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding IsChatMode}"
+                                         Value="True">
+                                <Setter Property="IsVisible" Value="False" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Label Text="{Binding Response}"
+                               TextColor="#FFFFFF"
+                               FontSize="16"
+                               LineHeight="1.5"
+                               LineBreakMode="WordWrap"/>
+                    </Border>
 
-            <HorizontalStackLayout>
-                <Label Text="Modo Chat"
-                       VerticalOptions="Center" />
-                <Switch IsToggled="{Binding IsChatMode}" />
-            </HorizontalStackLayout>
+                    <VerticalStackLayout IsVisible="{Binding Sources.Count}" Margin="0,10,0,20">
+                        <Label Text="Fragmentos relevantes"
+                               FontAttributes="Bold"
+                               FontSize="14"
+                               CharacterSpacing="1"
+                               TextColor="#64748B"
+                               Margin="0,0,0,10"/>
+                        <CollectionView ItemsSource="{Binding Sources}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BackgroundColor="#1E293B"
+                                            Padding="15"
+                                            Margin="0,6"
+                                            Stroke="#334155"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 12">
+                                        <VerticalStackLayout Spacing="8">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <Label Grid.Column="0" 
+                                                       Text="{Binding title}"
+                                                       FontAttributes="Bold"
+                                                       FontSize="14"
+                                                       TextColor="#F8FAFC"/>
+                                                <Border Grid.Column="1" 
+                                                        BackgroundColor="#064E3B"
+                                                        StrokeThickness="0"
+                                                        StrokeShape="RoundRectangle 8"
+                                                        Padding="6,2">
+                                                    <Label Text="{Binding score, StringFormat='{0:F2}'}"
+                                                           FontSize="11"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#34D399"/>
+                                                </Border>
+                                            </Grid>
+                                            <Label Text="{Binding text}"
+                                                   FontSize="13"
+                                                   LineHeight="1.4"
+                                                   TextColor="#94A3B8"
+                                                   LineBreakMode="WordWrap"/>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
 
-            <!-- ================= CHAT ================= -->
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
 
-            <CollectionView ItemsSource="{Binding Messages}"
-                            IsVisible="{Binding IsChatMode}"
-                            HeightRequest="300">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame Margin="5" BackgroundColor="#2a2a2a">
-                            <VerticalStackLayout>
-                                <Label Text="{Binding Role}"
-                                       FontAttributes="Bold"
-                                       FontSize="12"/>
-                                <Label Text="{Binding Content}" />
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+        <!-- ================= INPUT ================= -->
+        <Border Grid.Row="2"
+                BackgroundColor="#1E293B"
+                Stroke="#334155"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 24"
+                Padding="5"
+                Margin="15,10,15,20">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,10" Radius="20" Opacity="0.3"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*,Auto">
+                <Entry Grid.Column="0"
+                       Placeholder="Escribe tu mensaje..."
+                       PlaceholderColor="#64748B"
+                       Text="{Binding Question}"
+                       BackgroundColor="Transparent"
+                       TextColor="#F8FAFC"
+                       FontSize="15"
+                       ClearButtonVisibility="WhileEditing"
+                       VerticalOptions="Center"
+                       Margin="15,0,5,0"/>
+                <Button Grid.Column="1"
+                        Text="Enviar"
+                        FontAttributes="Bold"
+                        Command="{Binding AskCommand}"
+                        BackgroundColor="#10B981"
+                        TextColor="White"
+                        CornerRadius="20"
+                        WidthRequest="90"
+                        HeightRequest="40"/>
+            </Grid>
+        </Border>
 
-            <!-- ================= QUERY ================= -->
-
-            <Label Text="{Binding Response}"
-                   IsVisible="{Binding IsChatMode, Converter={StaticResource InverseBoolConverter}}"
-                   Margin="0,10,0,0"/>
-
-            <!-- ================= INPUT ================= -->
-
-            <Entry Placeholder="Escribe tu pregunta"
-                   Text="{Binding Question}" />
-
-            <Button Text="Preguntar"
-                    Command="{Binding AskCommand}" />
-
-            <!-- ================= SOURCES ================= -->
-
-            <CollectionView ItemsSource="{Binding Sources}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame BorderColor="Gray" Margin="5">
-                            <VerticalStackLayout>
-                                <Label Text="{Binding title}" FontAttributes="Bold"/>
-                                <Label Text="{Binding score, StringFormat='Score: {0:F2}'}"/>
-                                <Label Text="{Binding text}" FontSize="12"/>
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-        </VerticalStackLayout>
-    </ScrollView>
+    </Grid>
 </ContentPage>

@@ -2,18 +2,21 @@
 using System.Globalization;
 using Microsoft.Maui.Controls;
 
-namespace RagMaui.Helpers
+namespace RagMaui.Converters
 {
-    public class InverseBoolConverter : IValueConverter
+    public class CountToBoolConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is bool b ? !b : false;
+            if (value is int count)
+                return count > 0;
+
+            return false;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value is bool b ? !b : false;
+            throw new NotImplementedException();
         }
     }
 }

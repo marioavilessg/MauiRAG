@@ -39,12 +39,13 @@ namespace RagMaui.ViewModels
             set { _isChatMode = value; OnPropertyChanged(); }
         }
 
-        // 🔥 SOLO lectura desde el servicio compartido
         public Workspace SelectedWorkspace
         {
             get => _ragService.CurrentWorkspace;
         }
 
+        public string SelectedWorkspaceName =>
+            _ragService.CurrentWorkspace?.Name ?? "Sin workspace";
         public ObservableCollection<Source> Sources { get; set; }
             = new ObservableCollection<Source>();
 
@@ -80,6 +81,15 @@ namespace RagMaui.ViewModels
                 return;
             }
 
+            var answerText = result.GetText();
+
+            if (string.IsNullOrWhiteSpace(answerText))
+            {
+                answerText = $"[INFO] No se encontró el texto. JSON Recibido:\n{result.RawJson}";
+            }
+
+            Response = answerText;
+
             if (IsChatMode)
             {
                 Messages.Add(new ChatMessage
@@ -91,12 +101,8 @@ namespace RagMaui.ViewModels
                 Messages.Add(new ChatMessage
                 {
                     Role = "assistant",
-                    Content = result.textResponse
+                    Content = answerText
                 });
-            }
-            else
-            {
-                Response = result.textResponse;
             }
 
             Sources.Clear();
@@ -110,27 +116,38 @@ namespace RagMaui.ViewModels
             Question = string.Empty;
         }
 
-        // 🔥 Método para refrescar cuando vuelves de Settings
         public void RefreshWorkspace()
         {
             OnPropertyChanged(nameof(SelectedWorkspace));
+            OnPropertyChanged(nameof(SelectedWorkspaceName));
         }
 
         public async Task InitializeAsync()
         {
-            if (_ragService.CurrentWorkspace != null)
-                return;
-
-            var list = await _ragService.GetWorkspacesAsync();
-
-            if (list.Any())
+            try
             {
-                var first = list.First();
+                if (_ragService.CurrentWorkspace != null)
+                    return;
 
-                _ragService.CurrentWorkspace = first;
-                _ragService.WorkspaceSlug = first.Slug;
+                var list = await _ragService.GetWorkspacesAsync();
 
-                OnPropertyChanged(nameof(SelectedWorkspace));
+                if (list != null && list.Any())
+                {
+                    var first = list.First();
+
+                    _ragService.CurrentWorkspace = first;
+                    _ragService.WorkspaceSlug = first.Slug;
+
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        OnPropertyChanged(nameof(SelectedWorkspace));
+                        OnPropertyChanged(nameof(SelectedWorkspaceName));
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in MainViewModel Init: {ex.Message}");
             }
         }
 

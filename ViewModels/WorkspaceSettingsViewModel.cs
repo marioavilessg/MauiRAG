@@ -25,6 +25,9 @@ namespace RagMaui.ViewModels
         public ObservableCollection<Workspace> Workspaces { get; set; }
             = new ObservableCollection<Workspace>();
 
+        public ObservableCollection<Document> Documents { get; set; }
+            = new ObservableCollection<Document>();
+
         public Workspace SelectedWorkspace
         {
             get => _selectedWorkspace;
@@ -37,6 +40,8 @@ namespace RagMaui.ViewModels
                 {
                     _ragService.WorkspaceSlug = value.Slug;
                     _ragService.CurrentWorkspace = value;
+
+                    _ = LoadDocumentsAsync();
                 }
             }
         }
@@ -68,33 +73,86 @@ namespace RagMaui.ViewModels
         public Command SavePromptCommand => new(async () => await SavePrompt());
         public Command RenameWorkspaceCommand => new(async () => await RenameWorkspace());
 
+        public Command UploadDocumentCommand => new(async () => await UploadDocument());
+
         #endregion
 
         #region Methods
 
         public async Task LoadWorkspacesAsync()
         {
-            var list = await _ragService.GetWorkspacesAsync();
-
-            Workspaces.Clear();
-
-            foreach (var ws in list)
-                Workspaces.Add(ws);
-
-            if (Workspaces.Any())
+            try
             {
-                // 🔥 Si ya hay uno activo lo mantenemos
-                if (_ragService.CurrentWorkspace != null)
+                var list = await _ragService.GetWorkspacesAsync();
+
+                MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    SelectedWorkspace = Workspaces
-                        .FirstOrDefault(w => w.Slug == _ragService.CurrentWorkspace.Slug);
-                }
-                else
-                {
-                    // 🔥 Si no hay ninguno activo, seleccionamos el primero
-                    SelectedWorkspace = Workspaces.First();
-                }
+                    Workspaces.Clear();
+                    if (list != null)
+                    {
+                        foreach (var ws in list)
+                            Workspaces.Add(ws);
+                    }
+
+                    if (Workspaces.Any())
+                    {
+                        if (_ragService.CurrentWorkspace != null)
+                        {
+                            SelectedWorkspace = Workspaces
+                                .FirstOrDefault(w => w.Slug == _ragService.CurrentWorkspace.Slug);
+                        }
+                        else
+                        {
+                            SelectedWorkspace = Workspaces.First();
+                        }
+                    }
+                });
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error LoadWorkspacesAsync: {ex.Message}");
+            }
+        }
+
+        public async Task LoadDocumentsAsync()
+        {
+            try
+            {
+                if (SelectedWorkspace == null)
+                    return;
+
+                var docs = await _ragService.GetDocumentsAsync(SelectedWorkspace.Slug);
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Documents.Clear();
+                    if (docs != null)
+                    {
+                        foreach (var doc in docs)
+                            Documents.Add(doc);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                 System.Diagnostics.Debug.WriteLine($"Error LoadDocumentsAsync: {ex.Message}");
+            }
+        }
+
+        private async Task UploadDocument()
+        {
+            if (SelectedWorkspace == null)
+                return;
+
+            var file = await FilePicker.PickAsync();
+
+            if (file == null)
+                return;
+
+            bool success = await _ragService.UploadDocumentAsync(file.FullPath);
+
+            if (success)
+                await LoadDocumentsAsync();
         }
 
         private async Task CreateWorkspace()
@@ -137,14 +195,9 @@ namespace RagMaui.ViewModels
             if (SelectedWorkspace == null)
                 return;
 
-            var success = await _ragService.UpdateSystemPromptAsync(
+            await _ragService.UpdateSystemPromptAsync(
                 SelectedWorkspace.Slug,
                 SystemPrompt);
-
-            if (success)
-            {
-                // nada más, igual que hacías en Main
-            }
         }
 
         private async Task RenameWorkspace()
@@ -159,7 +212,6 @@ namespace RagMaui.ViewModels
             if (success)
             {
                 await LoadWorkspacesAsync();
-
                 RenameWorkspaceName = string.Empty;
                 OnPropertyChanged(nameof(RenameWorkspaceName));
             }
